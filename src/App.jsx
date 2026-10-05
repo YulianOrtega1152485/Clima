@@ -1,9 +1,10 @@
-import { useState } from 'react'
+import { useState,useMemo } from 'react'
 import heroImg from './assets/hero.png'
 import reactLogo from './assets/react.svg'
 import viteLogo from './assets/vite.svg'
 import './App.css'
 import { useFetch } from './hooks/useFetch'
+
 
 function descripcion(code) {
   if (code === 0) return { texto: "Despejado", icono: "☀️" };
@@ -44,12 +45,24 @@ function Clima({ ubicacion }) {
   const urlClima = `https://api.open-meteo.com/v1/forecast?latitude=${ubicacion?.latitude}&longitude=${ubicacion?.longitude}&current=temperature_2m,weather_code,wind_speed_10m&daily=temperature_2m_max,temperature_2m_min,weather_code&timezone=auto`
   const clima = useFetch(urlClima);
   const desc = descripcion(clima.datos?.current?.weather_code);
+  const resumen = useMemo(() => {
+    if (!clima.datos) return null;
+    const max = clima.datos.daily.temperature_2m_max;
+    const min = clima.datos.daily.temperature_2m_min;
+    return {
+      maxima: Math.max(...max),
+      minima: Math.min(...min),
+      diaMax: clima.datos.daily.time[max.indexOf(Math.max(...max))],
+    };
+  }, [clima.datos]);
+
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
       <h2>{ubicacion.name}, {ubicacion.country}</h2>
-      <p>{clima.datos?.current?.temperature_2m}</p>
+      <p>{clima.datos?.current?.temperature_2m} °C</p>
       <p>{desc.icono} {desc.texto}</p>
       <p>{clima.datos?.current?.wind_speed_10m} m/s</p>
+      <p> esta semana: maxima{resumen?.maxima}°C, minima {resumen?.minima}°C. El día más caluroso es el {resumen?.diaMax}</p>
       {clima.datos?.daily && <ClimaDiario daily={clima.datos.daily} />}
     </div>
   )
@@ -85,12 +98,12 @@ function App() {
           <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: "10px" }}>
             {
 
-              ciudades.map((fecha) => (
-                <button key={fecha.id} onClick={() => {
-                  setText(fecha.name)
-                  setUbicacion(fecha)
+              ciudades.map((item) => (
+                <button key={item.id} onClick={() => {
+                  setText(item.name)
+                  setUbicacion(item)
                 }}>
-                  {fecha.name}, {fecha.country}
+                  {item.name}, {item.country}
                 </button>
               ))
             }
