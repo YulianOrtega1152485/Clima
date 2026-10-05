@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 
 export function useFetch(url) {
-    console.log(2)
     const [datos, setDatos] = useState(null);
     const [cargando, setCargando] = useState(false);
     const [error, setError] = useState(null);
@@ -19,7 +18,7 @@ export function useFetch(url) {
                 }
                 console.log("respuesta"+respuesta.status)
                 const dato = await respuesta.json();
-                setDatos(dato.results?dato:null);
+                setDatos(dato);
             } catch (e) {
                 if (e.name === "AbortError") return; // cancelación, no es un error real
                 setError(e.message);
